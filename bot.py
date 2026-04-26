@@ -91,7 +91,7 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
 def main():
     TOKEN = os.getenv("BOT_TOKEN")
 
-    if not TOKEN:
+    if not TOKEN:"8608803954:AAEN8UN3TpJRuYCbGyHWVXL4AgfZSpGQaWw" 
         print("❌ مفيش توكن!")
         return
 
