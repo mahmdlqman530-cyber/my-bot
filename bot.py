@@ -86,7 +86,7 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
 # تشغيل البوت
 # ======================
 def main():
-    TOKEN = os.getenv("8608803954:AAEN8UN3TpJRuYCbGyHWVXL4AgfZSpGQaWw") 
+    TOKEN =
 
     if not TOKEN:
         print("❌ لم يتم العثور على التوكن!")
