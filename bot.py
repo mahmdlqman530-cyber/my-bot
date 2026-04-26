@@ -1,22 +1,7 @@
 import logging
 import os
-import threading
-from flask import Flask
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
-
-# ======================
-# Flask server (مهم لـ Render)
-# ======================
-app_web = Flask(__name__)
-
-@app_web.route('/')
-def home():
-    return "Bot is running ✅"
-
-def run_web():
-    port = int(os.environ.get("PORT", 10000))
-    app_web.run(host="0.0.0.0", port=port)
 
 # ======================
 # إعداد اللوج
@@ -58,54 +43,63 @@ def clean_text(text: str):
     return ''.join(char for char in text if char.isalnum() or char.isspace()).strip()
 
 # ======================
-# الرد
+# الرد الذكي
 # ======================
 def get_response(msg: str):
     msg = clean_text(msg)
 
+    # تطابق مباشر
     if msg in QA_DB:
         return QA_DB[msg]
 
+    # بحث جزئي
     for q, a in QA_DB.items():
-        if clean_text(q) in msg or msg in clean_text(q):
+        q_clean = clean_text(q)
+        if q_clean in msg or msg in q_clean:
             return a
 
-    return "مش فاهمك كويس 🤔"
+    return "مش فاهمك كويس 🤔 جرّب تكتب بطريقة أبسط."
 
 # ======================
-# أوامر البوت
+# /start
 # ======================
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("أهلاً 👋 البوت شغال 24 ساعة 🤖")
-
-async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.message:
-        await update.message.reply_text(get_response(update.message.text))
-
-async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
-    logger.error(f"Error: {context.error}")
+    await update.message.reply_text(
+        "أهلاً بيك 👋\nأنا بوت دردشة شغال 24 ساعة 🤖\nجرب اكتب: ازيك"
+    )
 
 # ======================
-# تشغيل
+# الرسائل
+# ======================
+async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.message and update.message.text:
+        response = get_response(update.message.text)
+        await update.message.reply_text(response)
+
+# ======================
+# أخطاء
+# ======================
+async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
+    logger.error("حدث خطأ: %s", context.error)
+
+# ======================
+# تشغيل البوت
 # ======================
 def main():
-    TOKEN = os.getenv("BOT_TOKEN")
+    TOKEN ="8608803954:AAEN8UN3TpJRuYCbGyHWVXL4AgfZSpGQaWw"
 
-    if not TOKEN:"8608803954:AAEN8UN3TpJRuYCbGyHWVXL4AgfZSpGQaWw" 
-        print("❌ مفيش توكن!")
+    if not TOKEN:
+        print("❌ لم يتم العثور على التوكن!")
         return
 
-    # تشغيل السيرفر في Thread
-    threading.Thread(target=run_web).start()
+    app = Application.builder().token(TOKEN).build()
 
-    bot = Application.builder().token(TOKEN).build()
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    app.add_error_handler(error_handler)
 
-    bot.add_handler(CommandHandler("start", start))
-    bot.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
-    bot.add_error_handler(error_handler)
-
-    print("✅ البوت شغال...")
-    bot.run_polling()
+    print("✅ البوت شغال الآن...")
+    app.run_polling()
 
 if __name__ == "__main__":
     main()
